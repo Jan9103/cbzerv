@@ -45,7 +45,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if not path.isfile(target_file):
             if path.isfile(path.join(target_file, "index.html")):
-                self.send_response(301)
+                self.send_response(307)
                 self.send_header("Location", f"{parsedurl.path}/index.html")
                 self.end_headers()
                 return
@@ -120,10 +120,21 @@ class RequestHandler(BaseHTTPRequestHandler):
             images = [i.filename for i in zip_ref.filelist if i.filename.rsplit(".", 1)[1] in ["png", "jpg", "jpeg", "gif", "svg"]]
         images.sort()
         thispath = html.escape(parsedurl.path)
+
+        # calculate next chapter
+        dir, filename = path.split(file)
+        dircontent: List[str] = listdir(dir)
+        dircontent.sort()
+        index_of_this: int = dircontent.index(filename)
+        next_chapter: Optional[str] = None
+        if len(dircontent) > index_of_this + 1:
+            next_chapter = dircontent[index_of_this + 1]
+
         self.wfile.write(f'''
             {HTML_HEAD}
                 <h1>{generate_html_pathstr(unquote(parsedurl.path))}</h1>
                 {"<br>".join([f'<img src="{thispath}?image={html.escape(i)}">' for i in images])}
+                {f'<br><a href="{html.escape(next_chapter)}">{html.escape(next_chapter)}</a>' if next_chapter else ""}
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
 
