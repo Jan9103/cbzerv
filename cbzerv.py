@@ -132,6 +132,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         self.wfile.write(f'''
             {HTML_HEAD}
+                <style>body{{margin-left:auto;margin-right:auto;width:fit-content;}}</style>
                 <h1>{generate_html_pathstr(unquote(parsedurl.path))}</h1>
                 {"<br>".join([f'<img src="{thispath}?image={html.escape(i)}">' for i in images])}
                 {f'<br><a href="{html.escape(next_chapter)}">{html.escape(next_chapter)}</a>' if next_chapter else ""}
