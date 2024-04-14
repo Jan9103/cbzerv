@@ -141,6 +141,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         thispath = html.escape(parsedurl.path)
         if path.isdir(target_file):
             files = [f'<li><a href="{thispath}/{html.escape(i)}">{html.escape(i)}</a></li>' for i in listdir(target_file)]
+            files.sort()
         self.wfile.write(f'''
             {HTML_HEAD}
                 <h1>{generate_html_pathstr(unquote(parsedurl.path))}</h1>
