@@ -123,7 +123,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(f'''
             {HTML_HEAD}
                 <h1>{generate_html_pathstr(unquote(parsedurl.path))}</h1>
-                {"".join([f'<img src="{thispath}?image={html.escape(i)}">' for i in images])}
+                {"<br>".join([f'<img src="{thispath}?image={html.escape(i)}">' for i in images])}
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
 
