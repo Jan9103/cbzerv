@@ -108,16 +108,27 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", image_mime)
             self.end_headers()
+            try:
+                with ZipFile(file, "r") as zip_ref:
+                    self.wfile.write(zip_ref.read(imagefile))
+            except PermissionError:
+                # i dont see a easy way to return a error as image without extensive libs or storing it to RAM
+                pass
+            return
+
+        images: List[str] = []
+        try:
             with ZipFile(file, "r") as zip_ref:
-                self.wfile.write(zip_ref.read(imagefile))
+                images = [i.filename for i in zip_ref.filelist if i.filename.rsplit(".", 1)[1] in ["png", "jpg", "jpeg", "gif", "svg"]]
+        except PermissionError:
+            self.send_response(500)
+            self.send_header("Content-Type", MIME_TEXT)
+            self.end_headers()
+            self.wfile.write(b'Unable to display file: server has insufficient permissions to read it')
             return
         self.send_response(200)
         self.send_header("Content-Type", MIME_HTML)
         self.end_headers()
-        # TODO: cbz index
-        images: List[str] = []
-        with ZipFile(file, "r") as zip_ref:
-            images = [i.filename for i in zip_ref.filelist if i.filename.rsplit(".", 1)[1] in ["png", "jpg", "jpeg", "gif", "svg"]]
         images.sort()
         thispath = html.escape(parsedurl.path)
 
@@ -146,14 +157,22 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(f"file extension {extension} is not supported.".encode(encoding="utf-8", errors="replace"))
 
     def send_index(self, target_file: str, parsedurl: ParseResult) -> None:
-        self.send_response(200)
-        self.send_header("Content-Type", MIME_HTML)
-        self.end_headers()
         files: List[str] = []
         thispath = html.escape(parsedurl.path)
         if path.isdir(target_file):
-            files = [f'<li><a href="{thispath}/{html.escape(i)}">{html.escape(i)}</a></li>' for i in listdir(target_file)]
+            try:
+                raw_files: List[str] = listdir(target_file)
+            except PermissionError:
+                self.send_response(500)
+                self.send_header("Content-Type", MIME_TEXT)
+                self.end_headers()
+                self.wfile.write(b'Unable to generate directory index: server is missing read and/or list permissions.')
+                return
+            files = [f'<li><a href="{thispath}/{html.escape(i)}">{html.escape(i)}</a></li>' for i in raw_files]
             files.sort()
+        self.send_response(200)
+        self.send_header("Content-Type", MIME_HTML)
+        self.end_headers()
         self.wfile.write(f'''
             {HTML_HEAD}
                 <h1>{generate_html_pathstr(unquote(parsedurl.path))}</h1>
