@@ -1,22 +1,40 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Optional, List, TypeVar, Dict, Set, Generator, Tuple
+from typing import Optional, List, TypeVar, Dict, Set
 from os import path, listdir, environ, walk
 from zipfile import ZipFile
 from urllib.parse import urlparse, parse_qs, ParseResult, unquote
 from functools import lru_cache
 import html
 
-# https://wiki.selfhtml.org/wiki/MIME-Type/%C3%9Cbersicht
+# common mimes used by hand
 MIME_JS = "text/javascript"
 MIME_JSON = "application/json"
 MIME_HTML = "text/html; charset=utf-8"
 MIME_TEXT = "text/text"
-MIME_CSS = "text/css"
-MIME_JPG = "image/jpeg"
-MIME_PNG = "image/png"
-MIME_SVG = "image/svg+xml"
-MIME_GIF = "image/gif"
 MIME_PDF = "application/pdf"
+# all supported mimes
+FILE_EXT_TO_MIME: Dict[str, str] = {
+    "css": "text/css",
+    "gif": "image/gif",
+    "html": MIME_HTML,
+    "jpeg": "image/jpeg",
+    "jpg": "image/jpeg",
+    "js": MIME_JS,
+    "json": MIME_JSON,
+    "pdf": MIME_PDF,
+    "png": "image/png",
+    "svg": "image/svg+xml",
+    "txt": MIME_TEXT,
+    "webp": "image/webp",
+}
+IMAGE_FILE_EXTENSIONS: List[str] = [
+    "gif",
+    "jpeg",
+    "jpg",
+    "png",
+    "svg",
+    "webp",
+]
 
 HTML_HEAD: str = '''
 <!DOCTYPE HTML><html><head>
@@ -31,15 +49,8 @@ HTML_HEAD: str = '''
 '''
 HTML_TAIL: str = '</body></html>'
 
-IMAGE_FILE_EXTENSIONS: List[str] =  [
-    "png",
-    "jpg",
-    "jpeg",
-    "gif",
-    "svg"
-]
-
 CLEAR_CACHE_PATH: str = "/clear_serverside_cache"
+
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
@@ -320,26 +331,7 @@ def find_all_tagfile_paths(basedir: Optional[str] = None) -> List[str]:
     ]
 
 def get_mime(extension: str) -> Optional[str]:
-    extension = extension.lower()
-    if extension in ("html", "htm"):
-        return MIME_HTML
-    if extension == "js":
-        return MIME_JS
-    if extension == "css":
-        return MIME_CSS
-    if extension == "json":
-        return MIME_JSON
-    if extension == "txt":
-        return MIME_TEXT
-    if extension in ("jpg", "jpeg"):
-        return MIME_JPG
-    if extension == "png":
-        return MIME_PNG
-    if extension == "gif":
-        return MIME_GIF
-    if extension == "svg":
-        return MIME_SVG
-    return None
+    return FILE_EXT_TO_MIME.get(extension.lower(), None)
 
 T = TypeVar('T')
 def get_index(l: List[T], idx: int) -> Optional[T]:
