@@ -189,11 +189,16 @@ class RequestHandler(BaseHTTPRequestHandler):
         if len(dircontent) > index_of_this + 1:
             next_chapter = dircontent[index_of_this + 1]
 
+        images_html: str = "<br>".join((
+            f'''<img src="{thispath}?image={html.escape(i)}"{' loading="lazy"' if idx>10 else ""}>'''
+            for idx, i in enumerate(images)
+        ))
+
         self.wfile.write(f'''
             {HTML_HEAD}
                 <style>body{{margin-left:auto;margin-right:auto;width:fit-content;}}</style>
                 <h1>{generate_html_pathstr(unquote(parsedurl.path))}</h1>
-                {"<br>".join([f'<img src="{thispath}?image={html.escape(i)}">' for i in images])}
+                {images_html}
                 {f'<br><a href="{html.escape(next_chapter)}">{html.escape(next_chapter)}</a>' if next_chapter else ""}
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
