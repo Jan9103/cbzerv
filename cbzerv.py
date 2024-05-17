@@ -5,6 +5,7 @@ from zipfile import ZipFile
 from urllib.parse import urlparse, parse_qs, ParseResult, unquote
 from functools import lru_cache
 import html
+import re
 
 # common mimes used by hand
 MIME_JS = "text/javascript"
@@ -177,7 +178,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", MIME_HTML)
         self.end_headers()
-        images.sort()
+        images.sort(key=_sort_human_key)
         thispath = html.escape(parsedurl.path)
 
         # calculate next chapter
@@ -298,7 +299,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(b'Unable to generate directory index: server is missing read and/or list permissions.')
                 return
             raw_files = [i for i in raw_files if i not in FILES_TO_NOT_INDEX]
-            raw_files.sort()
+            raw_files.sort(key=_sort_human_key)
             sent_images: int = 0
             for file in raw_files:
                 dir_picture: str = next((
@@ -346,6 +347,13 @@ def find_all_tagfile_paths(basedir: Optional[str] = None) -> List[str]:
 
 def get_mime(extension: str) -> Optional[str]:
     return FILE_EXT_TO_MIME.get(extension.lower(), None)
+
+def _sort_human_key(key: str) -> tuple:
+    parts = re.split(r'(\d*\.\d+|\d+)', key)
+    return tuple(
+        (e.swapcase() if i % 2 == 0 else float(e))
+        for i, e in enumerate(parts)
+    )
 
 T = TypeVar('T')
 def get_index(l: List[T], idx: int) -> Optional[T]:
