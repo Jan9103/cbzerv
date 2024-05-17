@@ -294,13 +294,16 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return
             raw_files = [i for i in raw_files if i not in FILES_TO_NOT_INDEX]
             raw_files.sort()
+            sent_images: int = 0
             for file in raw_files:
                 dir_picture: str = next((
-                    f'<img src="{thispath}/{html.escape(file)}/{img_file_name}">'
+                    f'''<img src="{thispath}/{html.escape(file)}/{img_file_name}"{' loading="lazy"' if sent_images > 10 else ""}>'''
                     for img_file_name in (f"folder.{i}" for i in IMAGE_FILE_EXTENSIONS)
                     if path.isfile(f"{target_file}/{file}/{img_file_name}")
                 ), "") if path.isdir(f"{target_file}/{file}") else ""
-                files.append(f'<li><a href="{thispath}/{html.escape(file)}">{dir_picture}{html.escape(file)}</a></li>')
+                files.append(f'<li><a href="{thispath}/{html.escape(file)}">{dir_picture or html.escape(file)}</a></li>')
+                if dir_picture:
+                    sent_images += 1
         self.send_response(200)
         self.send_header("Content-Type", MIME_HTML)
         self.end_headers()
