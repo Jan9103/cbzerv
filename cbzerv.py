@@ -49,7 +49,14 @@ HTML_HEAD: str = '''
 '''
 HTML_TAIL: str = '</body></html>'
 
-CLEAR_CACHE_PATH: str = "/clear_serverside_cache"
+QUERY_URL_SUFFIX: str = "/query"
+CLEAR_CACHE_URL_SUFFIX: str = "/clear_serverside_cache"
+TAGFILE_NAME: str = "tagfile.txt"
+
+FILES_TO_NOT_INDEX: List[str] = [
+    *(f"folder.{i}" for i in IMAGE_FILE_EXTENSIONS),
+    TAGFILE_NAME,
+]
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -61,13 +68,13 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         parsedurl = urlparse(self.path)
-        if (parsedurl.path == CLEAR_CACHE_PATH):
+        if parsedurl.path.endswith(CLEAR_CACHE_URL_SUFFIX):
             read_tagfile.cache_clear()
             self.send_response(200)
             self.send_header("Content-Type", MIME_HTML)
             self.end_headers()
             self.wfile.write(
-                f'{HTML_HEAD}Cleared cache <a href="javascript:history.back()">Back</a>{HTML_TAIL}'
+                f'{HTML_HEAD}Cleared cache <a href="{html.escape(parsedurl.path[:-len(CLEAR_CACHE_URL_SUFFIX)])}">Back</a>{HTML_TAIL}'
                 .encode(encoding="utf-8", errors="replace")
             )
             return
@@ -76,7 +83,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_response(403)
             self.end_headers()
             return
-        if (parsedurl.path.endswith("/query")):
+        if (parsedurl.path.endswith(QUERY_URL_SUFFIX)):
             self.handle_query(parsedurl, target_file)
             return
 
@@ -194,12 +201,12 @@ class RequestHandler(BaseHTTPRequestHandler):
     def handle_query(self, parsedurl: ParseResult, target_file: str) -> None:
         query_string: Dict[str, List[str]] = parse_qs(parsedurl.query)
         if not query_string:
-            self.send_query_page(parsedurl)
+            self.send_query_page(parsedurl, target_file)
             return
         wanted: List[str] = [k.strip() for k, v in query_string.items() if "wanted" in v]
         unwanted: List[str] = [k.strip() for k, v in query_string.items() if "unwanted" in v]
         del query_string
-        tagfiles: List[str] = find_all_tagfile_paths(path.relpath(target_file[:-6]))
+        tagfiles: List[str] = find_all_tagfile_paths(target_file[:-len(QUERY_URL_SUFFIX)])
         matching_dirs: List[str] = []
         for tagfile in tagfiles:
             tags = read_tagfile(tagfile)
@@ -216,25 +223,25 @@ class RequestHandler(BaseHTTPRequestHandler):
         for dir_path in matching_dirs:
             html_path: str = html.escape(path.relpath(dir_path, path.curdir))
             dir_picture: str = next((
-                f'<img src="{html_path}/{img_file_name}">'
+                f'<img src="/{html_path}/{img_file_name}">'
                 for img_file_name in (f"folder.{i}" for i in IMAGE_FILE_EXTENSIONS)
                 if path.isfile(f"{dir_path}/{img_file_name}")
             ), "")
-            files_html.append(f'<li><a href="{html_path}">{dir_picture}{html_path}</a></li>')
+            files_html.append(f'<li><a href="/{html_path}">{dir_picture or html_path}</a></li>')
         files_html.sort()
         self.wfile.write(f'''
             {HTML_HEAD}
                 <nav><a href="javascript:window.history.back();">Back</a></nav>
-                <h1>Search Results within {generate_html_pathstr(parsedurl.path[:-6])}</h1>
+                <h1>Search Results within {generate_html_pathstr(parsedurl.path[:-len(QUERY_URL_SUFFIX)])}</h1>
                 <ul>{"".join(files_html)}</ul>
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
 
-    def send_query_page(self, parsedurl: ParseResult) -> None:
+    def send_query_page(self, parsedurl: ParseResult, target_file: str) -> None:
         self.send_response(200)
         self.send_header("Content-Type", MIME_HTML)
         self.end_headers()
-        tagfiles: List[str] = find_all_tagfile_paths()
+        tagfiles: List[str] = find_all_tagfile_paths(target_file[:-len(QUERY_URL_SUFFIX)])
         tags: Set[str] = set()
         for filepath in tagfiles:
             tags.update(read_tagfile(filepath))
@@ -255,7 +262,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(f'''
             {HTML_HEAD}
                 <nav><a href="javascript:window.history.back();">Back</a></nav>
-                <h1>Search within {generate_html_pathstr(parsedurl.path[:-6])}</h1>
+                <h1>Search within {generate_html_pathstr(parsedurl.path[:-len(QUERY_URL_SUFFIX)])}</h1>
                 <form action="{html.escape(parsedurl.path)}">
                     <table>
                         <tr><th>Allow</th><th>Enforce</th><th>Block</th><th>Tag</th></tr>
@@ -263,9 +270,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     </table>
                     <input type="submit" value="Search">
                 </form>
-                <form action="{CLEAR_CACHE_PATH}">
-                    <input type="submit" value="Clear serverside cache">
-                </form>
+                <a href="{parsedurl.path}/clear_serverside_cache">Clear serverside cache</a>
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
 
@@ -287,6 +292,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(b'Unable to generate directory index: server is missing read and/or list permissions.')
                 return
+            raw_files = [i for i in raw_files if i not in FILES_TO_NOT_INDEX]
+            raw_files.sort()
             for file in raw_files:
                 dir_picture: str = next((
                     f'<img src="{thispath}/{html.escape(file)}/{img_file_name}">'
@@ -294,13 +301,12 @@ class RequestHandler(BaseHTTPRequestHandler):
                     if path.isfile(f"{target_file}/{file}/{img_file_name}")
                 ), "") if path.isdir(f"{target_file}/{file}") else ""
                 files.append(f'<li><a href="{thispath}/{html.escape(file)}">{dir_picture}{html.escape(file)}</a></li>')
-            files.sort()
         self.send_response(200)
         self.send_header("Content-Type", MIME_HTML)
         self.end_headers()
         self.wfile.write(f'''
             {HTML_HEAD}
-                <nav><a href="query">Query</a></nav>
+                <nav><a href="{html.escape(parsedurl.path)}{QUERY_URL_SUFFIX}">Search</a></nav>
                 <h1>{generate_html_pathstr(unquote(parsedurl.path))}</h1>
                 <ul>{"".join(files)}</ul>
             {HTML_TAIL}
@@ -327,7 +333,7 @@ def find_all_tagfile_paths(basedir: Optional[str] = None) -> List[str]:
         path.join(subdir, filename)
         for subdir, _, files in walk(basedir or path.curdir)
         for filename in files
-        if filename == "tagfile.txt"
+        if filename == TAGFILE_NAME
     ]
 
 def get_mime(extension: str) -> Optional[str]:
