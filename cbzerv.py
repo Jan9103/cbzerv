@@ -1,5 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Optional, List
+from typing import Optional, List, TypeVar
 from os import path, listdir, environ
 from zipfile import ZipFile
 from urllib.parse import urlparse, parse_qs, ParseResult, unquote
@@ -17,16 +17,26 @@ MIME_SVG = "image/svg+xml"
 MIME_GIF = "image/gif"
 MIME_PDF = "application/pdf"
 
-HTML_HEAD = '''
+HTML_HEAD: str = '''
 <!DOCTYPE HTML><html><head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         html,body{height:100%;margin:0;background-color:black;color:white;}
         a{color:cyan;}a:visited{color:orange;}
         img{max-width:100%;}
+        ul>li>a>img{max-width:80%;max-height:300px;}
+        ul{column-width:300px;column-count:auto;list-style-type:none;}
     </style></head><body>
 '''
-HTML_TAIL = '</body></html>'
+HTML_TAIL: str = '</body></html>'
+
+IMAGE_FILE_EXTENSIONS: List[str] =  [
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "svg"
+]
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
@@ -119,7 +129,11 @@ class RequestHandler(BaseHTTPRequestHandler):
         images: List[str] = []
         try:
             with ZipFile(file, "r") as zip_ref:
-                images = [i.filename for i in zip_ref.filelist if i.filename.rsplit(".", 1)[1] in ["png", "jpg", "jpeg", "gif", "svg"]]
+                images = [
+                    i.filename
+                    for i in zip_ref.filelist
+                    if get_index(i.filename.rsplit(".", 1), 1) in IMAGE_FILE_EXTENSIONS
+                ]
         except PermissionError:
             self.send_response(500)
             self.send_header("Content-Type", MIME_TEXT)
@@ -168,7 +182,14 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(b'Unable to generate directory index: server is missing read and/or list permissions.')
                 return
-            files = [f'<li><a href="{thispath}/{html.escape(i)}">{html.escape(i)}</a></li>' for i in raw_files]
+            #dir_picture: Optional[str] = next((file for file in raw_files if (parts := file.rsplit(".", 1))[0] == "folder" and len(parts) == 2 and parts[1] in ()), None)
+            for file in raw_files:
+                dir_picture: str = next((
+                    f'<img src="{thispath}/{html.escape(file)}/{img_file_name}">'
+                    for img_file_name in (f"folder.{i}" for i in IMAGE_FILE_EXTENSIONS)
+                    if path.isfile(f"{target_file}/{file}/{img_file_name}")
+                ), "") if path.isdir(f"{target_file}/{file}") else ""
+                files.append(f'<li><a href="{thispath}/{html.escape(file)}">{dir_picture}{html.escape(file)}</a></li>')
             files.sort()
         self.send_response(200)
         self.send_header("Content-Type", MIME_HTML)
@@ -212,6 +233,10 @@ def get_mime(extension: str) -> Optional[str]:
     if extension == "svg":
         return MIME_SVG
     return None
+
+T = TypeVar('T')
+def get_index(l: List[T], idx: int) -> Optional[T]:
+    return l[idx] if len(l) > idx else None
 
 def main(port: int) -> None:
     server: HTTPServer = HTTPServer(("", port), RequestHandler)

@@ -12,7 +12,9 @@ There is no restriction on filestructure, but heres an example filestructure:
 cbzerv.py
 cbzerv                  # <-- base path for nginx revers-proxy
 |- Marvel
+|  |- folder.png        # <-- folder.ext is used as a directory thumbnail if present
 |  |- Spiderman
+|     |- folder.jpg
 |     |- Episode1.cbz
 |     |- Episode2.cbz
 |     |- Episode3.pdf
