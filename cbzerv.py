@@ -182,7 +182,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # calculate next chapter
         dir, filename = path.split(file)
-        dircontent: List[str] = listdir(dir)
+        dircontent: List[str] = [i for i in listdir(dir) if i not in FILES_TO_NOT_INDEX]
         dircontent.sort()
         index_of_this: int = dircontent.index(filename)
         next_chapter: Optional[str] = None
@@ -302,7 +302,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             sent_images: int = 0
             for file in raw_files:
                 dir_picture: str = next((
-                    f'''<img src="{thispath}/{html.escape(file)}/{img_file_name}"{' loading="lazy"' if sent_images > 10 else ""}>'''
+                    f'''<img src="{thispath}/{html.escape(file)}/{img_file_name}"{' loading="lazy"' if sent_images > 10 else ""} alt="{html.escape(file)}">'''
                     for img_file_name in (f"folder.{i}" for i in IMAGE_FILE_EXTENSIONS)
                     if path.isfile(f"{target_file}/{file}/{img_file_name}")
                 ), "") if path.isdir(f"{target_file}/{file}") else ""
