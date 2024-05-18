@@ -300,6 +300,13 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(b'Unable to generate directory index: server is missing read and/or list permissions.')
                 return
             raw_files = [i for i in raw_files if i not in FILES_TO_NOT_INDEX]
+
+            if len(raw_files) == 1:
+                self.send_response(307)  # temporary redirect
+                self.send_header("Location", f"{thispath}/{raw_files[0]}")
+                self.end_headers()
+                return
+
             raw_files.sort(key=_sort_human_key)
             sent_images: int = 0
             for file in raw_files:
