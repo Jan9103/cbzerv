@@ -291,7 +291,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def send_index(self, target_file: str, parsedurl: ParseResult) -> None:
         files: List[str] = []
-        thispath = html.escape(parsedurl.path)
+        thispath: str = html.escape(parsedurl.path)
         if path.isdir(target_file):
             try:
                 raw_files: List[str] = listdir(target_file)
@@ -305,7 +305,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             if len(raw_files) == 1:
                 self.send_response(307)  # temporary redirect
-                self.send_header("Location", f"{thispath}/{raw_files[0]}")
+                self.send_header("Location", f"{parsedurl.path}/{raw_files[0]}")
                 self.end_headers()
                 return
 
