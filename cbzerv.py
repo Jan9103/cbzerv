@@ -44,7 +44,8 @@ HTML_HEAD: str = '''
         html,body{height:100%;margin:0;background-color:black;color:white;}
         a{color:cyan;}a:visited{color:orange;}
         img{max-width:100%;}
-        ul>li>a>img{max-width:80%;max-height:300px;}
+        ul>li>a>img{max-width:80%;max-height:300px;border:5px solid cyan;}
+        ul>li>a:visited>img{border-color:orange;}
         ul{column-width:300px;column-count:auto;list-style-type:none;}
     </style></head><body>
 '''
