@@ -47,6 +47,7 @@ HTML_HEAD: str = '''
         ul>li>a>img{max-width:80%;max-height:300px;border:5px solid cyan;}
         ul>li>a:visited>img{border-color:orange;}
         ul{column-width:300px;column-count:auto;list-style-type:none;}
+        #to_top_button{text-decoration:none;padding:10px;color:#fff;background:#333;border-radius:100px;position:sticky;bottom:5px;}
     </style></head><body>
 '''
 HTML_TAIL: str = '</body></html>'
@@ -199,8 +200,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(f'''
             {HTML_HEAD}
                 <style>body{{margin-left:auto;margin-right:auto;width:fit-content;}}</style>
-                <h1>{generate_html_pathstr(unquote(parsedurl.path))}</h1>
+                <h1 id="h1_cbz_title">{generate_html_pathstr(unquote(parsedurl.path))}</h1>
                 {images_html}
+                <a href="#h1_cbz_title" id="to_top_button">Go to top</a>
                 {f'<br><a href="{html.escape(next_chapter)}">{html.escape(next_chapter)}</a>' if next_chapter else ""}
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
@@ -324,8 +326,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(f'''
             {HTML_HEAD}
                 <nav><a href="{html.escape(parsedurl.path)}{QUERY_URL_SUFFIX}">Search</a></nav>
-                <h1>{generate_html_pathstr(unquote(parsedurl.path))}</h1>
+                <h1 id="h1_index_title">{generate_html_pathstr(unquote(parsedurl.path))}</h1>
                 <ul>{"".join(files)}</ul>
+                <a href="#h1_index_title" id="to_top_button">Go to top</a>
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
 
