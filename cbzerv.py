@@ -186,7 +186,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         # calculate next chapter
         dir, filename = path.split(file)
         dircontent: List[str] = [i for i in listdir(dir) if i not in FILES_TO_NOT_INDEX]
-        dircontent.sort()
+        dircontent.sort(key=_sort_human_key)
         index_of_this: int = dircontent.index(filename)
         next_chapter: Optional[str] = None
         if len(dircontent) > index_of_this + 1:
@@ -237,7 +237,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 if path.isfile(f"{dir_path}/{img_file_name}")
             ), "")
             files_html.append(f'<li><a href="/{html_path}">{dir_picture or html_path}</a></li>')
-        files_html.sort()
+        files_html.sort(key=_sort_human_key)
         self.wfile.write(f'''
             {HTML_HEAD}
                 <nav><a href="javascript:window.history.back();">Back</a></nav>
