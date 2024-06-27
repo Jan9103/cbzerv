@@ -341,7 +341,7 @@ def read_tagfile(tagfile: str) -> List[str]:
 def generate_html_pathstr(filepath: str) -> str:
     result: List[str] = []
     while True:
-        p = filepath.rsplit("/", 1)
+        p = filepath.rstrip("/").rsplit("/", 1)
         if len(p) < 2 or not p[1]:
             result.reverse()
             return "".join(result)
