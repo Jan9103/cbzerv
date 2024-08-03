@@ -1,35 +1,56 @@
 # CBZerv
 
-My personal Comic-Book-Zip/PDF Server for use within my intranet.
+A lightweight webserver for viewing mangas/ comics stored on a linux/ bsd server.
 
-NOTE: it does not work on Windows (file path separator not supported)
+## Features:
 
-Usage:
+* Tag based search (with exclude support) (`tagfile.txt`)
+* Directory preview pictures (`folder.extension`)
+* No restriction on file-structure
+* Cbz and Pdf support
+* Phone-view support
+* Low resource usage
+* Hackable
+   * Support for custom `index.html` files at any level (as well as accompanying css/.. files)
+   * Usable with a reverse proxy
+
+## Usage:
+
 ```sh
 PORT=8080 python3 cbzerv.py
 ```
 
-There is no restriction on filestructure, but heres an example filestructure:
+Example filestructure:
 ```
 cbzerv.py
-cbzerv                  # <-- base path for nginx revers-proxy
+cbzerv
 |- Marvel
-|  |- folder.png        # <-- folder.ext is used as a directory thumbnail if present
+|  |- folder.png
 |  |- Spiderman
-|     |- tagfile.txt    # <-- newline seperated list of tags for this directory (ex: genres)
+|     |- tagfile.txt
 |     |- folder.jpg
 |     |- Episode1.cbz
-|     |- Episode2.cbz
-|     |- Episode3.pdf
+|     |- Episode2.pdf
 |- Manga
-   |- index.html        # <-- custom index file
-   |- my_style.css      # <-- for use in custom index
-   |- manga-symbol.png  # <-- for use in custom index
    |- Izumi Tomoki      # <-- author
    |  |- Mieruko-chan
    |     |- tagfile.txt
    |     |- Ch 01.cbz
    |     |- Ch 02.cbz
    |- Tower of God
-   |  |- Book 001.cbz
+      |- Book 001.cbz
 ```
+
+Example `tagfile.txt` contents:
+```
+Comedy
+Slice of Life
+Vampires
+Shounen
+Japanese
+```
+
+## Alternatives
+
+* [Komga](https://komga.org/): High resource usage (3-20% cpu idle on my pi), but nicer UI
+* [Mihon](https://github.com/mihonapp/mihon) and forks: Android app (-> on device) with builtin downloader
