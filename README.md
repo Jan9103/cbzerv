@@ -50,7 +50,16 @@ Shounen
 Japanese
 ```
 
+## Scripts included
+
+(for the usage of these run `python3 {script-name} --help`)
+
+* `downloader/guya.py`: Synchronise all (or specific) mangas from [Guya][] instances (should also support most guya-forks).
+
 ## Alternatives
 
-* [Komga](https://komga.org/): High resource usage (3-20% cpu idle on my pi), but nicer UI
-* [Mihon](https://github.com/mihonapp/mihon) and forks: Android app (-> on device) with builtin downloader
+* [Komga](https://komga.org/): Nicer UI, but high resource usage (3-20% cpu idle on my pi)
+* [Guya][]: Nicer UI, but gets way harder to navigate the bigger your library grows
+* [Mihon](https://github.com/mihonapp/mihon) and forks: Android app with downloader extension
+
+[Guya]: https://github.com/subject-f/guyamoe
