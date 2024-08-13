@@ -62,7 +62,6 @@ def download_series(base_download_dir: str, website_domain: str, series_slug: st
                             series_slug=series_slug,
                             website_domain=website_domain,
                         )
-                        print(f">> {image_url}")
                         response = requests.get(image_url)
                         if response.status_code == 200:
                             break
