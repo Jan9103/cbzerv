@@ -82,7 +82,7 @@ def download_series(base_download_dir: str, website_domain: str, series_slug: st
 def get_all_series_slugs(website_domain: str) -> List[str]:
     response = requests.get(f"{website_domain}/api/get_all_series/")
     response.raise_for_status()
-    return [data["slug"] for name, data in response.json()]
+    return [data["slug"] for name, data in response.json().items()]
 
 
 if __name__ == "__main__":
