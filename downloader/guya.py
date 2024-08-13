@@ -100,7 +100,7 @@ def download_series(base_download_dir: str, website_domain: str, series_slug: st
                     else:
                         assert False, f"Failed to download image {image} for {series_slug}/{chapter_no} (none of the attempted image-url-schemes worked)"
                     # no need to read chunked. if a single image is to big for ram its not a usable manga anyway
-                    cbz.writestr(image, response.content)
+                    cbz.writestr(image.split('?')[0], response.content)
                     sleep(sleep_time_between_images)
         except Exception as orig_exc:
             try:
