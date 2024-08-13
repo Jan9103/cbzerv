@@ -59,6 +59,7 @@ TAGFILE_NAME: str = "tagfile.txt"
 FILES_TO_NOT_INDEX: List[str] = [
     *(f"folder.{i}" for i in IMAGE_FILE_EXTENSIONS),
     TAGFILE_NAME,
+    "meta_data.json",
 ]
 
 
