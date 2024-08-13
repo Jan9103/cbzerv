@@ -4,6 +4,7 @@
 # This is obviously only meant for migrating your own instance or accessing official publishing sites
 
 import requests
+import json
 from zipfile import ZipFile
 from typing import Optional, List
 from time import sleep
@@ -13,6 +14,14 @@ from os import path, makedirs, unlink
 IMAGE_URL_SCHEMES: List[str] = [
     "{website_domain}/media/manga/{series_slug}/chapters/{folder}/{group_id}/{image}",  # (fork-patch) https://github.com/milleniumbug/guyamoe
     "{website_domain}/media/manga/{series_slug}/{chapter_no}/{image}",  # from the offical documentation
+]
+IMAGE_FILE_EXTENSIONS: List[str] = [
+    "gif",
+    "jpeg",
+    "jpg",
+    "png",
+    "svg",
+    "webp",
 ]
 
 
@@ -40,7 +49,30 @@ def download_series(base_download_dir: str, website_domain: str, series_slug: st
     if not path.exists(series_dir):
         makedirs(series_dir, exist_ok=True)
     assert path.isdir(path.realpath(series_dir)), f"Cannot download {series_slug} since the target directory ({series_dir}) exists and is not a directory"
-    # TODO: download cover. data["cover"] contains a absolute path without domain
+
+    if not path.exists(path.join(series_dir, "meta_data.json")):
+        with open(path.join(series_dir, "meta_data.json"), "w") as fp:
+            json.dump({
+                "name": data.get("title"),
+                "author": data.get("author"),
+                "description": data.get("description"),
+                "source": f"{website_domain}/read/manga/{series_slug}",
+            }, fp)
+
+    if (
+        "cover" in data
+        and any(True for i in IMAGE_FILE_EXTENSIONS if data["cover"].endswith(f".{i}"))
+        and not path.exists(image_path := path.join(series_dir, "folder." + data["cover"].rsplit(".", 2)[-1]))
+    ):
+        cover_url: str = f"{website_domain}/{data['cover']}" if data['cover'][0] == '/' else data['cover']
+        try:
+            response = requests.get(cover_url)
+            response.raise_for_status()
+            with open(image_path, "wb") as fp:
+                fp.write(response.content)
+        except Exception:
+            print(f"Failed to download series cover for {series_slug} from {data['cover']}")
+
     for chapter_no, chapter_data in data["chapters"].items():
         folder: Optional[str] = chapter_data.get("folder", None)
         target_cbz_file: str = path.join(series_dir, f"{chapter_no}.cbz")
