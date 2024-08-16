@@ -91,6 +91,12 @@ class RequestHandler(BaseHTTPRequestHandler):
         if (parsedurl.path.endswith(QUERY_URL_SUFFIX)):
             self.handle_query(parsedurl, target_file)
             return
+        if not path.exists(target_file):
+            self.send_response(404)
+            self.send_header("Content-Type", MIME_HTML)
+            self.end_headers()
+            self.wfile.write(f"{HTML_HEAD}<h1>404</h1>{HTML_TAIL}".encode(encoding="utf-8", errors="replace"))
+            return
 
         if not path.isfile(target_file):
             if path.isfile(path.join(target_file, "index.html")):
