@@ -45,7 +45,7 @@ HTML_HEAD: str = '''
         a{color:cyan;}a:visited{color:orange;}
         img{max-width:100%;}
         ul>li>a>img{max-width:80%;max-height:300px;border:5px solid cyan;}
-        ul>li{display: inline-block;}
+        ul>li{display: inline-block;width:300px;}
         ul>li>a:visited>img{border-color:orange;}
         ul{list-style-type:none;}
         #to_top_button{text-decoration:none;padding:10px;color:#fff;background:#333;border-radius:100px;position:sticky;bottom:5px;}
