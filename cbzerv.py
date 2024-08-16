@@ -45,8 +45,9 @@ HTML_HEAD: str = '''
         a{color:cyan;}a:visited{color:orange;}
         img{max-width:100%;}
         ul>li>a>img{max-width:80%;max-height:300px;border:5px solid cyan;}
+        ul>li{display: inline-block;}
         ul>li>a:visited>img{border-color:orange;}
-        ul{column-width:300px;column-count:auto;list-style-type:none;}
+        ul{list-style-type:none;}
         #to_top_button{text-decoration:none;padding:10px;color:#fff;background:#333;border-radius:100px;position:sticky;bottom:5px;}
     </style></head><body>
 '''
