@@ -210,8 +210,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                 <style>body{{margin-left:auto;margin-right:auto;width:fit-content;}}</style>
                 <h1 id="h1_cbz_title">{generate_html_pathstr(unquote(parsedurl.path))}</h1>
                 {images_html}
-                <a href="#h1_cbz_title" id="to_top_button">Go to top</a>
                 {f'<br><a href="{html.escape(next_chapter)}">{html.escape(next_chapter)}</a>' if next_chapter else ""}
+                <br><br><br><a href="#h1_cbz_title" id="to_top_button">Go to top</a>
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
 
