@@ -274,7 +274,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 <td>{tag}</td>
             </tr>
             '''
-            for tag in (html.escape(i) for i in escaped_tags) if tag
+            for tag in (i for i in escaped_tags) if tag
         ))
         self.wfile.write(f'''
             {HTML_HEAD}
