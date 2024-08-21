@@ -52,9 +52,8 @@ Japanese
 
 ## Scripts included
 
-(for the usage of these run `python3 {script-name} --help`)
-
-* `downloader/guya.py`: Synchronise all (or specific) mangas from [Guya][] instances (should also support most guya-forks).
+* `downloader/guya.py`: Synchronise all (or specific) mangas from [Guya][] instances (should also support most guya-forks). (usage: `python3 downloader/guya --help`)
+* `tools/cbz_optimizer.nu`: Try to reduce the png filesize of the images within the `cbz` files without loosing data. (usage: `nu tools/cbz_optimizer.nu --help`)
 
 ## Alternatives
 
