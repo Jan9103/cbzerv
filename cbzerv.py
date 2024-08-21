@@ -250,7 +250,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(f'''
             {HTML_HEAD}
                 <nav><a href="javascript:window.history.back();">Back</a></nav>
-                <h1>Search Results within {generate_html_pathstr(parsedurl.path[:-len(QUERY_URL_SUFFIX)])}</h1>
+                <h1>Search Results within {generate_html_pathstr(parsedurl.path[:-len(QUERY_URL_SUFFIX)])}</h1>({len(matching_dirs)} results)
                 <ul>{"".join(files_html)}</ul>
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
@@ -301,6 +301,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def send_index(self, target_file: str, parsedurl: ParseResult) -> None:
         files: List[str] = []
         thispath: str = html.escape(parsedurl.path)
+        filecount: int = 0
         if path.isdir(target_file):
             try:
                 raw_files: List[str] = listdir(target_file)
@@ -311,6 +312,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(b'Unable to generate directory index: server is missing read and/or list permissions.')
                 return
             raw_files = [i for i in raw_files if i not in FILES_TO_NOT_INDEX]
+            filecount = len(raw_files)
 
             if len(raw_files) == 1:
                 self.send_response(307)  # temporary redirect
@@ -335,7 +337,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(f'''
             {HTML_HEAD}
                 <nav><a href="{html.escape(parsedurl.path)}{QUERY_URL_SUFFIX}">Search</a></nav>
-                <h1 id="h1_index_title">{generate_html_pathstr(unquote(parsedurl.path))}</h1>
+                <h1 id="h1_index_title">{generate_html_pathstr(unquote(parsedurl.path))}</h1>({filecount} results)
                 <ul>{"".join(files)}</ul>
                 <a href="#h1_index_title" id="to_top_button">Go to top</a>
             {HTML_TAIL}
