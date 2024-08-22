@@ -260,22 +260,22 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", MIME_HTML)
         self.end_headers()
         tagfiles: List[str] = find_all_tagfile_paths(target_file[:-len(QUERY_URL_SUFFIX)])
-        tags: Set[str] = set()
+        tags: Dict[str, int] = {}
         for filepath in tagfiles:
-            tags.update(read_tagfile(filepath))
-        escaped_tags: List[str] = [html.escape(i) for i in tags]
-        escaped_tags.sort()
-        del tags
+            for tag in read_tagfile(filepath):
+                tags[tag] = (tags.get(tag) or 0) + 1
+        tag_names: List[str] = list(tags.keys())
+        tag_names.sort()
         tags_html: str = "".join((
             f'''
             <tr>
-                <td><input type="radio" name="{tag}" value="ignore" checked="checked"></td>
-                <td><input type="radio" name="{tag}" value="wanted"></td>
-                <td><input type="radio" name="{tag}" value="unwanted"></td>
-                <td>{tag}</td>
+                <td><input type="radio" name="{html.escape(tag)}" value="ignore" checked="checked"></td>
+                <td><input type="radio" name="{html.escape(tag)}" value="wanted"></td>
+                <td><input type="radio" name="{html.escape(tag)}" value="unwanted"></td>
+                <td>{html.escape(tag)} ({tags[tag]})</td>
             </tr>
             '''
-            for tag in (i for i in escaped_tags) if tag
+            for tag in tag_names if tag
         ))
         self.wfile.write(f'''
             {HTML_HEAD}
