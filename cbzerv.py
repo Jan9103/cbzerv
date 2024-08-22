@@ -6,6 +6,7 @@ from urllib.parse import urlparse, parse_qs, ParseResult, unquote
 from functools import lru_cache
 import html
 import re
+import email.utils
 
 # common mimes used by hand
 MIME_JS = "text/javascript"
@@ -123,8 +124,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.return_unsupported_mime(file_ext)
             return
 
+        last_edited: str = email.utils.formatdate(path.getmtime(target_file))
         self.send_response(200)
         self.send_header("Content-Type", mime)
+        self.send_header("Last-Modified", last_edited)
+        if file_ext in IMAGE_FILE_EXTENSIONS:
+            self.send_header("Cache-Control", "max-age=604800")
         self.end_headers()
         with open(target_file, "rb") as f:
             self.wfile.write(f.read())
@@ -132,14 +137,17 @@ class RequestHandler(BaseHTTPRequestHandler):
     def send_pdf(self, file: str, parsedurl: ParseResult) -> None:
         query = parse_qs(parsedurl.query)
         if query:
+            last_edited: str = email.utils.formatdate(path.getmtime(file))
             self.send_response(200)
             self.send_header("Content-Type", MIME_PDF)
+            self.send_header("Last-Modified", last_edited)
             self.end_headers()
             with open(file, "rb") as f:
                 self.wfile.write(f.read())
             return
         self.send_response(200)
         self.send_header("Content-Type", MIME_HTML)
+        # no clientside cache (both unlikely and would create issues when the next chapter releases)
         self.end_headers()
         thisurl = html.escape(parsedurl.path)
         # https://www.w3docs.com/snippets/html/how-to-embed-pdf-in-html.html
@@ -156,6 +164,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def send_cbz(self, file: str, parsedurl: ParseResult) -> None:
         query = parse_qs(parsedurl.query)
         if "image" in query:
+            last_edited: str = email.utils.formatdate(path.getmtime(file))
             imagefile: str = query["image"] if isinstance(query["image"], str) else query["image"][0]
             image_extension: str = path.splitext(imagefile)[1].lstrip(".")
             image_mime: Optional[str] = get_mime(image_extension)
@@ -164,6 +173,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return
             self.send_response(200)
             self.send_header("Content-Type", image_mime)
+            self.send_header("Last-Modified", last_edited)
             self.end_headers()
             try:
                 with ZipFile(file, "r") as zip_ref:
@@ -189,6 +199,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
         self.send_response(200)
         self.send_header("Content-Type", MIME_HTML)
+        # no clientside cache (both unlikely and would create issues when the next chapter releases)
         self.end_headers()
         images.sort(key=_sort_human_key)
         thispath = html.escape(parsedurl.path)
