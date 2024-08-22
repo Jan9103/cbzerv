@@ -50,6 +50,7 @@ HTML_HEAD: str = '''
         ul{list-style-type:none;}
         #to_top_button{text-decoration:none;padding:10px;color:#fff;background:#333;border-radius:100px;position:sticky;bottom:5px;}
         @media (pointer:coarse) or (max-aspect-ratio:0.7){body,img{width:100%;}}
+        @media (min-aspect-ratio:1){img{width:calc(0.8*100vh);}}
     </style></head><body>
 '''
 HTML_TAIL: str = '</body></html>'
