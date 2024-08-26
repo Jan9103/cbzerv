@@ -323,7 +323,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(b'Unable to generate directory index: server is missing read and/or list permissions.')
                 return
-            raw_files = [i for i in raw_files if i not in FILES_TO_NOT_INDEX]
+            raw_files = [i for i in raw_files if i not in FILES_TO_NOT_INDEX and not path.exists(path.join(target_file, i, ".ignore"))]
             filecount = len(raw_files)
 
             if len(raw_files) == 1:
@@ -372,11 +372,12 @@ def generate_html_pathstr(filepath: str) -> str:
         filepath = p[0]
 
 def find_all_tagfile_paths(basedir: Optional[str] = None) -> List[str]:
+    basedir = basedir or path.curdir
     return [
         path.join(subdir, filename)
-        for subdir, _, files in walk(basedir or path.curdir)
+        for subdir, _, files in walk(basedir)
         for filename in files
-        if filename == TAGFILE_NAME
+        if filename == TAGFILE_NAME and not path.exists(path.join(subdir, ".ignore"))
     ]
 
 def get_mime(extension: str) -> Optional[str]:

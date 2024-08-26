@@ -13,6 +13,7 @@ A lightweight webserver for viewing mangas/ comics stored on a linux/ bsd server
 * Hackable
    * Support for custom `index.html` files at any level (as well as accompanying css/.. files)
    * Usable with a reverse proxy
+* Support for `.ignore` files
 
 ## Usage:
 
