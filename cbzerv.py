@@ -4,6 +4,7 @@ from os import path, listdir, environ, walk
 from zipfile import ZipFile
 from urllib.parse import urlparse, parse_qs, ParseResult, unquote
 from functools import lru_cache
+from math import floor
 import html
 import re
 import email.utils
@@ -278,13 +279,14 @@ class RequestHandler(BaseHTTPRequestHandler):
                 tags[tag] = (tags.get(tag) or 0) + 1
         tag_names: List[str] = list(tags.keys())
         tag_names.sort()
+        pm: float = float(len(tagfiles)) / 100.0
         tags_html: str = "".join((
             f'''
             <tr>
                 <td><input type="radio" name="{html.escape(tag)}" value="ignore" checked="checked"></td>
                 <td><input type="radio" name="{html.escape(tag)}" value="wanted"></td>
                 <td><input type="radio" name="{html.escape(tag)}" value="unwanted"></td>
-                <td>{html.escape(tag)} ({tags[tag]})</td>
+                <td>{html.escape(tag)} ({tags[tag]}; {floor(tags[tag] / pm)}%)</td>
             </tr>
             '''
             for tag in tag_names if tag
