@@ -51,6 +51,7 @@ HTML_HEAD: str = '''
         ul>li>a:visited>img{border-color:orange;}
         ul{list-style-type:none;}
         #to_top_button{text-decoration:none;padding:10px;color:#fff;background:#333;border-radius:100px;position:sticky;bottom:5px;}
+        .st{width:0px!important;height:0px!important;overflow:hidden!important;display:inline-block!important;}
         @media (pointer:coarse) or (max-aspect-ratio:0.7){body,img{width:100%;}}
         @media (min-aspect-ratio:1){img{width:calc(0.8*100vh);}}
     </style></head><body>
@@ -251,13 +252,16 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", MIME_HTML)
         self.end_headers()
         files_html: List[str] = []
+        sent_images: int = 0
         for dir_path in matching_dirs:
             html_path: str = html.escape(path.relpath(dir_path, path.curdir))
             dir_picture: str = next((
-                f'<img src="/{html_path}/{img_file_name}">'
+                f'''<img src="/{html_path}/{img_file_name}"{' loading="lazy"' if sent_images > 10 else ""}><div class="st">{html.escape(dir_path)}</div>'''
                 for img_file_name in (f"folder.{i}" for i in IMAGE_FILE_EXTENSIONS)
-                if path.isfile(f"{dir_path}/{img_file_name}")
+                if path.isfile(path.join(dir_path, img_file_name))
             ), "")
+            if dir_picture:
+                sent_images += 1
             files_html.append(f'<li><a href="/{html_path}">{dir_picture or html_path}</a></li>')
         files_html.sort(key=_sort_human_key)
         self.wfile.write(f'''
@@ -338,7 +342,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             sent_images: int = 0
             for file in raw_files:
                 dir_picture: str = next((
-                    f'''<img src="{thispath}/{html.escape(file)}/{img_file_name}"{' loading="lazy"' if sent_images > 10 else ""} alt="{html.escape(file)}">'''
+                    f'''<img src="{thispath}/{html.escape(file)}/{img_file_name}"{' loading="lazy"' if sent_images > 10 else ""} alt="{html.escape(file)}"><div class="st">{html.escape(file)}</div>'''
                     for img_file_name in (f"folder.{i}" for i in IMAGE_FILE_EXTENSIONS)
                     if path.isfile(f"{target_file}/{file}/{img_file_name}")
                 ), "") if path.isdir(f"{target_file}/{file}") else ""
