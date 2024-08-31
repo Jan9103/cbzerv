@@ -269,6 +269,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 <nav><a href="javascript:window.history.back();">Back</a></nav>
                 <h1>Search Results within {generate_html_pathstr(parsedurl.path[:-len(QUERY_URL_SUFFIX)])}</h1>({len(matching_dirs)} results)
                 <ul>{"".join(files_html)}</ul>
+                <br><br><br><a href="#h1_cbz_title" id="to_top_button">Go to top</a>
             {HTML_TAIL}
         '''.encode(encoding="utf-8", errors="replace"))
 
