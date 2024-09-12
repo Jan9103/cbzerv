@@ -1,5 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Optional, List, TypeVar, Dict, Set
+from typing import Optional, List, TypeVar, Dict, Set, Callable
 from os import path, listdir, environ, walk
 from zipfile import ZipFile
 from urllib.parse import urlparse, parse_qs, ParseResult, unquote
@@ -8,6 +8,18 @@ from math import floor
 import html
 import re
 import email.utils
+import bz2
+import subprocess
+
+
+ff_to_png: Callable[[bytes], bytes] = lambda x: subprocess.Popen(["magick", "FF:-", "PNG:-"], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(x)[0]
+
+try:
+    from wand.image import Image  # type: ignore
+    ff_to_png = lambda x: Image(blob=x, format="FF").make_blob(format="PNG")
+except ModuleNotFoundError:
+    pass
+
 
 # common mimes used by hand
 MIME_JS = "text/javascript"
@@ -168,8 +180,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         if "image" in query:
             last_edited: str = email.utils.formatdate(path.getmtime(file))
             imagefile: str = query["image"] if isinstance(query["image"], str) else query["image"][0]
-            image_extension: str = path.splitext(imagefile)[1].lstrip(".")
-            image_mime: Optional[str] = get_mime(image_extension)
+            image_mime: Optional[str] = None
+            ff: bool = False
+            if imagefile.endswith(".ff.bz2"):
+                image_mime = get_mime("png")
+                ff = True
+            else:
+                image_extension: str = path.splitext(imagefile)[1].lstrip(".")
+                image_mime = get_mime(image_extension)
             if image_mime is None:
                 self.return_unsupported_mime(image_extension)
                 return
@@ -179,7 +197,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             try:
                 with ZipFile(file, "r") as zip_ref:
-                    self.wfile.write(zip_ref.read(imagefile))
+                    self.wfile.write(ff_bz2_to_png(zip_ref.read(imagefile)) if ff else zip_ref.read(imagefile))
             except PermissionError:
                 # i dont see a easy way to return a error as image without extensive libs or storing it to RAM
                 pass
@@ -191,7 +209,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 images = [
                     i.filename
                     for i in zip_ref.filelist
-                    if get_index(i.filename.rsplit(".", 1), 1) in IMAGE_FILE_EXTENSIONS
+                    if get_index(i.filename.rsplit(".", 1), 1) in IMAGE_FILE_EXTENSIONS or i.filename.endswith(".ff.bz2")
                 ]
         except PermissionError:
             self.send_response(500)
@@ -400,6 +418,9 @@ def _sort_human_key(key: str) -> tuple:
 T = TypeVar('T')
 def get_index(l: List[T], idx: int) -> Optional[T]:
     return l[idx] if len(l) > idx else None
+
+def ff_bz2_to_png(ff_bz2: bytes) -> bytes:
+    return ff_to_png(bz2.decompress(ff_bz2))
 
 def main(port: int) -> None:
     server: HTTPServer = HTTPServer(("", port), RequestHandler)
