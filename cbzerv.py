@@ -100,7 +100,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 .encode(encoding="utf-8", errors="replace")
             )
             return
-        target_file: str = path.realpath(path.join(path.curdir, unquote(parsedurl.path.lstrip("/"))))
+        target_file: str = path.abspath(path.join(path.curdir, unquote(parsedurl.path.lstrip("/"))))
         if not target_file.startswith(path.abspath(path.curdir)):
             self.send_response(403)
             self.end_headers()
