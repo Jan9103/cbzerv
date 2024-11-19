@@ -77,6 +77,7 @@ Japanese
 ## Scripts included
 
 * `downloader/guya.py`: Synchronise all (or specific) mangas from [Guya][] instances (should also support most guya-forks). (usage: `python3 downloader/guya --help`)
+* `downloader/peppercarrot.py`: Download <https://www.peppercarrot.com>.
 * `tools/cbz_optimizer.nu`: Try to reduce the `cbz` filesize without loosing data. (usage: `nu tools/cbz_optimizer.nu --help`)
 
 ## Performance
